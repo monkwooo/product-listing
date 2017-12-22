@@ -23,7 +23,7 @@
 }
 
 .list-childs-selected {
-  background-color: blue;
+  color: #007bff;
 }
 
 @keyframes App-logo-spin {

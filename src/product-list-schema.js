@@ -9,7 +9,7 @@ function _getRandomString(length){
 
 function _getProduct(key){
   return {
-    imgSrc: './logo.svg',
+    imgSrc: require(`../img/${_.random(1,12)}.jpeg`),
     type: `type-of-product ${key}`,
     title: _getRandomString(8),
     description: _getRandomString(_.random(30, 60))

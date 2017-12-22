@@ -39,7 +39,7 @@ export default class App extends Component {
     this.setState(
       {
         filters: this.state.filters.map(
-          e => Boolean(e.type==type)?(
+          e => Boolean(e.type===type)?(
             { ...e, selected: !e.selected }
           ):e
         )
@@ -69,7 +69,9 @@ export default class App extends Component {
               </ListGroup>
             </Col>
             <Col xs="6" sm="9" md="9" lg="8">
-              {this.state.products.map(this._renderEachProduct)}
+              <Row>
+                {this.state.products.map(this._renderEachProduct)}
+              </Row>
             </Col>
           </Row>
         </Container>
@@ -84,20 +86,24 @@ export default class App extends Component {
       alt: 'Product Image ' + index
     }
     return (
-      <Card key={index}>
-        <CardImg {..._cardImgProps} />
-        <CardBody>
-          <CardTitle>{product.title}</CardTitle>
-          <CardText>{product.description}</CardText>
-        </CardBody>
-      </Card>
+      <Col xs="12" sm="6" md="6" lg="6" key={index}>
+        <Card style={{ margin: "30px"}}>
+          <CardImg {..._cardImgProps} />
+          <CardBody>
+            <CardTitle>{product.title}</CardTitle>
+            <CardText>{product.description}</CardText>
+          </CardBody>
+        </Card>
+      </Col>
     );
   }
   _renderEachFilter(filterItem, index){
     return (
       <ListGroupItem
+        key={index}
         active={filterItem.selected}
         onClick={this._selecteFilter.bind(this, filterItem.type)}
+        style={{ cursor: 'pointer', margin: '10px' }}
       >
         {filterItem.displayName}
         {Boolean(filterItem.childs)?(
