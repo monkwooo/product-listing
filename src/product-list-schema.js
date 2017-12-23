@@ -16,8 +16,8 @@ function _getProduct(key){
   }
 }
 
-export default function(list_of_filters){
+export default function(filter_data){
   return _.range(
-    _.random(10, 11+list_of_filters.length)
+    _.random(10, 11+Object.keys(filter_data).length)
   ).map(_getProduct);
 }

@@ -3,6 +3,7 @@ import 'bootstrap/dist/css/bootstrap.css';
 import React, { Component } from 'react';
 import logo from './logo.svg';
 import './App.css';
+import _ from 'lodash';
 import {
   Card,
   CardImg,
@@ -13,7 +14,8 @@ import {
   ListGroupItem,
   Container,
   Row,
-  Col
+  Col,
+  Alert
 } from 'reactstrap';
 
 import {
@@ -21,26 +23,45 @@ import {
   getProductByFilters,
 } from './apiCalls';
 
+function __compCol(obj){
+  var __keys = Object.keys(obj);
+  return _.zipObject(__keys, __keys.map(e => 12-obj[e]));
+}
+
 export default class App extends Component {
   constructor(props){
     super(props);
-    this._filters = getFilterList();
     this.state = {
-      filters: this._filters,
+      filters: [],
       products: [],
     }
+    this.__filterCol = {
+      xs: 6, sm: 6, md: 5, lg: 4
+    }
+    this.__productCol = __compCol(this.__filterCol);
   }
   componentDidMount(){
     getProductByFilters([]).then(
       resp => this.setState({ products: resp })
     );
+
+    getFilterList().then(
+      resp => this.setState({ filters: resp })
+    )
   }
-  _selecteFilter(type){
+  _selecteFilter(parentType, childType){
     this.setState(
       {
         filters: this.state.filters.map(
-          e => Boolean(e.type===type)?(
-            { ...e, selected: !e.selected }
+          e => Boolean(e.type===parentType)?(
+            {
+              ...e,
+              childs: e.childs.map(
+                ce => Boolean(ce.type===childType)?(
+                  { ...ce, selected: !ce.selected }
+                ):ce
+              )
+            }
           ):e
         )
       },
@@ -48,8 +69,19 @@ export default class App extends Component {
     );
   }
   _makeAPICall(){
+    var _ans = Object.assign(
+      {},
+      ...(
+        this.state.filters.map(
+          e => (
+            { [e.type]: e.childs.filter(ce => ce.selected).map(ce => ce.type) }
+          )
+        ).filter(ee => !!ee[Object.keys(ee)[0]].length)
+      )
+    );
+    console.log(_ans);
     getProductByFilters(
-      this.state.filters.filter(e => e.selected)
+      _ans
     ).then(
       rep => this.setState({ products: rep })
     )
@@ -63,14 +95,26 @@ export default class App extends Component {
         </header>
         <Container>
           <Row>
-            <Col xs="6" sm="3" md="3" lg="4">
+            <Col {...this.__filterCol} >
               <ListGroup>
-                {this.state.filters.map(this._renderEachFilter.bind(this))}
+                {this.state.filters.length?(
+                  this.state.filters.map(this._renderEachFilter.bind(this))
+                ):(
+                  <Alert color="primary">
+                    {"Loading Filters ..."}
+                  </Alert>
+                )}
               </ListGroup>
             </Col>
-            <Col xs="6" sm="9" md="9" lg="8">
+            <Col {...this.__productCol} >
               <Row>
-                {this.state.products.map(this._renderEachProduct)}
+                {this.state.products.length?(
+                  this.state.products.map(this._renderEachProduct)
+                ):(
+                  <Alert color="secondary">
+                    {"Loading Products ..."}
+                  </Alert>
+                )}
               </Row>
             </Col>
           </Row>
@@ -86,7 +130,7 @@ export default class App extends Component {
       alt: 'Product Image ' + index
     }
     return (
-      <Col xs="12" sm="6" md="6" lg="6" key={index}>
+      <Col xs="12" sm="12" md="12" lg="6" key={index}>
         <Card style={{ margin: "30px"}}>
           <CardImg {..._cardImgProps} />
           <CardBody>
@@ -99,21 +143,26 @@ export default class App extends Component {
   }
   _renderEachFilter(filterItem, index){
     return (
-      <ListGroupItem
-        key={index}
-        active={filterItem.selected}
-        onClick={this._selecteFilter.bind(this, filterItem.type)}
-        style={{ cursor: 'pointer', margin: '10px' }}
-      >
+      <ListGroupItem key={index} style={{ margin: '2px' }}>
         {filterItem.displayName}
-        {Boolean(filterItem.childs)?(
-          <ListGroup className={(
-            filterItem.selected?'list-childs-selected':''
-          )}>
-            {filterItem.childs.map(this._renderEachFilter.bind(this))}
-          </ListGroup>
-        ):null}
+        <ListGroup>
+          {filterItem.childs.map(
+            this._renderChildFilter.bind(this, filterItem.type)
+          )}
+        </ListGroup>
       </ListGroupItem>
     )
+  }
+  _renderChildFilter(parentType, childFilter, index){
+    return (
+      <ListGroupItem
+        key={index}
+        active={childFilter.selected}
+        onClick={this._selecteFilter.bind(this, parentType, childFilter.type)}
+        style={{ cursor: 'pointer', margin: '10px' }}
+      >
+        {childFilter.displayName}
+      </ListGroupItem>
+    );
   }
 }
