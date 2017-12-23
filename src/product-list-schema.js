@@ -16,8 +16,19 @@ function _getProduct(key){
   }
 }
 
-export default function(filter_data){
+export function PRODUCT_LIST(filter_data){
   return _.range(
     _.random(10, 11+Object.keys(filter_data).length)
   ).map(_getProduct);
+};
+
+export function PARSE_PRODUCTS(products){
+  return products.map(
+    each => ({
+      imgSrc: require(`../img/${_.random(1,12)}.jpeg`),
+      type: each._id,
+      title: each._source.name,
+      description: `INR ${each._source.price_base_unit/100} /-`
+    })
+  )
 }
